@@ -14,11 +14,8 @@ class Control extends Component {
 
 
     render() {
-        const startName = this.props.startOn ? "Restart" : "Start";
         return (
             <div className="App">
-                <button id="Start" onClick={this.props.nextPicture}>{startName}</button>
-                <span>   </span>
                 <button id="Back" onClick={this.props.nextPicture}>Back</button>
                 <span>   </span>
                 <button id="Next" onClick={this.props.nextPicture}>Next</button>

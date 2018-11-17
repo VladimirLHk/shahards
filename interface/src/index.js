@@ -4,6 +4,8 @@ import GameTreasurer from './gameTreasurer';
 import './index.css';
 import Interface from './interface';
 import registerServiceWorker from './registerServiceWorker';
+import GameMaster from './gameMaster';
+import PlayerBot from './PlayerBot';
 
 /*
 let ng = new GameTreasurer({});
@@ -23,6 +25,24 @@ for (let clmn=height;clmn>0;clmn--){
     deskPos.push(arr);
 }
 */
+let e = {
+    gameDimen: 6,
+    deskLength: 16,
+    'whitePlayer': (new PlayerBot({})).getMove,
+    'blackPlayer': (new PlayerBot({})).getMove
+};
+let ng = new GameMaster(e);
 
-ReactDOM.render(<Interface gameDimen={6} deskLength={16}/>, document.getElementById('root'));
+ng.makeGame();
+
+
+/*
+let a = {};
+a = {a1: 3};
+console.log(a);
+a.a2=4;
+console.log(a);
+*/
+
+ReactDOM.render(<Interface  gameList={ng.gs.gameList}/>, document.getElementById('root'));
 registerServiceWorker();

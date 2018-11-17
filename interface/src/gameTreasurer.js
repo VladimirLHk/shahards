@@ -31,14 +31,14 @@ class GameTreasurer {
         ]);
     }
 
-    get diceMove () {
+     diceMove () {
         // делает бросок костей
         return [Math.ceil(this.gameDimen * Math.random()),
                 Math.ceil(this.gameDimen * Math.random())
                 ];
     }
 
-    getNewPosition (oldPos, move, mover) {// считается, что ход проверен на реализуемость
+    getMovedPosition (oldPos, move, mover) {
         let moverNewPos = [];
         let direct = (mover === "white") ? 1 : -1;
         let competitor = (mover === "white") ? "black" : "white";
@@ -50,11 +50,28 @@ class GameTreasurer {
                 rowNewPos.push(oldPos.get(mover)[row][checkerNum] + direct * move[row][checkerNum] );
             }
             moverNewPos.push(rowNewPos.sort((a,b)=>{return b-a}));//сортировка нужна, чтобы после перепрыгивания первым считался тот, кто впереди
-         }
-        let newPos = new Map ([
+        }
+        return new Map ([
             [mover, moverNewPos],
             [competitor, oldPos.get(competitor)]
         ]);
+    }
+
+    getNewPosition (oldPos, move, mover) {// считается, что ход проверен на реализуемость
+        let gameDimen = this.gameDimen;
+/*        let moverNewPos = [];
+        let direct = (mover === "white") ? 1 : -1;
+        let competitor = (mover === "white") ? "black" : "white";
+        for (let row = 0; row<gameDimen; row++) {
+            let rowNewPos = [];
+            let checkersInRow = oldPos.get(mover)[row].length;
+            for (let checkerNum = 0;checkerNum<checkersInRow;checkerNum++){
+                rowNewPos.push(oldPos.get(mover)[row][checkerNum] + direct * move[row][checkerNum] );
+            }
+            moverNewPos.push(rowNewPos.sort((a,b)=>{return b-a}));//сортировка нужна, чтобы после перепрыгивания первым считался тот, кто впереди
+         }
+*/
+        let newPos = this.getMovedPosition(oldPos, move, mover);
         // поиск шашек на удаление и "приведение в исполнение"
 
         let blacks = newPos.get("black");
@@ -77,7 +94,7 @@ class GameTreasurer {
 
             if (blackCounter === whiteCounter) {//на линии есть шашки обоих игроков и их число равно
                 while (!resolve) {
-                    let fath = this.diceMove;
+                    let fath = this.diceMove();
 //                    console.log('!!!',fath);
                     if (fath[0] === fath[1]) continue; //на костях выпал дубль - бросать ещё раз.
                     resolve = true;
@@ -170,8 +187,6 @@ class GameTreasurer {
                 descrObj.firstNum = (arrLen==0) ? 1 : curVariantDescription[arrLen-1].lastNum+1;
                 descrObj.lastNum = descrObj.firstNum + variantsTotalNum -1;
                 curVariantDescription.push(descrObj);
-//        console.log(descrObj);
-//        for (let i=0; i<checkersPossibleMoves.length; i++) console.log(i, "--", checkersPossibleMoves[i]);
             }
         }
         return {varDescr: curVariantDescription, psblMoves: checkersPossibleMoves};
@@ -194,7 +209,7 @@ class GameTreasurer {
         }
 
         for (let i=0;i<len1;i++){//не выйдет ли шашка за пределы поля
-            result[i] = curPosInRow[i] + direct * checkingMoves [i];
+            result[i] = curPosInRow[i] + direct * checkingMoves[i];
             if (direct * result[i] >= boundary) return [];
         }
         let numSet = new Set (); //есть ли шашки, занимающие одну и ту же клетку

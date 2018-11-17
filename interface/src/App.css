@@ -1,3 +1,7 @@
+table {
+  table-layout: fixed; /* Фиксированная ширина ячеек */
+ }
+
 .App {
   text-align: left;
 }
@@ -14,6 +18,14 @@
   border-style: solid;
   border-width: 3px;
   margin: 0 auto;
+}
+
+.coln {
+  width: 1em;
+}
+
+.row {
+  height: 1em
 }
 
 .rightSide {
