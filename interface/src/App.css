@@ -4,12 +4,13 @@ table {
 
 .App {
   text-align: left;
+
 }
 
 .Notes {
-  width: 10em;
+  width: 24em;
   height: 28em;
-  padding-top: 10em;
+  padding-top: 1em;
   padding-left: 2em;
   overflow-y: hidden;
 }

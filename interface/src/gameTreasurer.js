@@ -475,6 +475,26 @@ class GameTreasurer {
         return position.get(color).reduce(f,0);
     }
 
+    calculateLosses(oldPos, newPos) {
+        let gameDimen = this.gameDimen;
+        let wLossesByRow = [gameDimen];
+        let bLossesByRow = [gameDimen];
+        let wTotalLoss = 0;
+        let bTotalLoss = 0;
+
+        for (let row=0;row<gameDimen;row++) {
+            wTotalLoss += wLossesByRow[row] = oldPos.get('white')[row].length - newPos.get('white')[row].length;
+            bTotalLoss += bLossesByRow[row] = oldPos.get('black')[row].length - newPos.get('black')[row].length
+        }
+
+        return {
+            wLosses: wTotalLoss,
+            wLossesByRow: wLossesByRow,
+            bLosses: bTotalLoss,
+            bLossesByRow: bLossesByRow
+        }
+    }
+
     isGameOver (state) {
         let wTotal = this.getCheckersTotalNum(state.position, 'white');
         if (!wTotal) return true;

@@ -18,12 +18,11 @@ class GameMaster extends GameTreasurer {
             whoMove: "white"
         };
         this.gs = new GameSecretary (params);
-
     }
 
     makeGame () {
-        while (this.isNotGameOver()) {this.makeStep()}
-        this.gs.signGameList(this.state.position);
+        while (this.isNotGameOver()) this.makeStep(); // игроки делают шаги до тех пор, пока игра не будет объявлена оконченной
+        this.gs.signGameList(this.state.position);// в протокол заносятся итоговые записи
     }
 
     makeStep () {
@@ -38,14 +37,16 @@ class GameMaster extends GameTreasurer {
         let rigthDice = false;
         while (!rigthDice){
             this.dice();
+            let curDice = this.state.dice.slice(); //чтобы в протоколе сохранились первоначальные (не упорядоченные по возрастангию) значеняи броска кубиков
             infoForPlayer.dice = this.state.dice; // (***)
 
-            let varNum = super.possibleVariantDescription(infoForPlayer).varDescr.length;
-            rigthDice = varNum > 0;
+            let varDescr = super.possibleVariantDescription(infoForPlayer).varDescr;
+            rigthDice = varDescr.length > 0;
+            let varNum = rigthDice ? varDescr[varDescr.length-1].lastNum : undefined;
 
-            this.gs.fixMoveDiceThrow(this.state.dice, this.state.whoMove, varNum);
+            this.gs.fixMoveDiceThrow(curDice, this.state.whoMove, varNum);
         }
-        infoForPlayer.dice = this.state.dice;//Зачем??? Между строкой (***) и этой состояние this.state.dice разве меняется???
+ //       infoForPlayer.dice = this.state.dice;//Зачем??? Между строкой (***) и этой состояние this.state.dice разве меняется???
         let move;
         let rightMove = false;
         this.gs.fixMoveStartTime(this.state.whoMove);
@@ -57,48 +58,24 @@ class GameMaster extends GameTreasurer {
                 console.log(this.state.position, move, this.state.whoMove);
             }
         }
-        this.gs.fixMoveEnd(move, this.state.whoMove);
+        this.gs.fixMoveEnd(move, this.state.whoMove); // в протокол заносится иоговые записи хода
 
         let oldPos = this.state.position;
         this.state.position = this.takeMove (move);
         this.nextPlayer();
     }
 
-
     nextPlayer () {
         let curPlayer = this.state.whoMove;
         this.state.whoMove = (curPlayer === "white") ? "black" : "white";
     }
 
-    takeMove (move) {
-        return super.getNewPosition (this.state.position, move, this.state.whoMove);
-    }
+    takeMove (move) {return super.getNewPosition (this.state.position, move, this.state.whoMove)}
 
-    calculateLosses(oldPos, newPos) {
-        let gameDimen = this.gameDimen;
-        let wLossesByRow = [gameDimen];
-        let bLossesByRow = [gameDimen];
-        let wTotalLoss = 0;
-        let bTotalLoss = 0;
-
-        for (let row=0;row<gameDimen;row++) {
-            wTotalLoss += wLossesByRow[row] = oldPos.get('white')[row].length - newPos.get('white')[row].length;
-            bTotalLoss += bLossesByRow[row] = oldPos.get('black')[row].length - newPos.get('black')[row].length
-        }
-
-        return {
-            wLosses: wTotalLoss,
-            wLossesByRow: wLossesByRow,
-            bLosses: bTotalLoss,
-            bLossesByRow: bLossesByRow
-        }
-    }
-
-    dice () {
     // делает бросок костей и записывает их в состояние
-        this.state.dice = super.diceMove();
-    }
+    dice () {this.state.dice = super.diceMove()}
 
+    // запрашивает у Хранителя оценку текущей позиции с точки зрения окончания игры
     isNotGameOver () {return !super.isGameOver(this.state)}
 
 }

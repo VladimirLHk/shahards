@@ -22,6 +22,7 @@ class Interface extends Component {
            const desk = this.props.gameList.summary.desk.split("x");
 
            this.gameDimen = +desk[0];
+           let initCheckersNum = +desk[0]*desk[0];
            this.deskLength = +desk[1];
            this.players = {
                "white": 'нолики',
@@ -37,7 +38,7 @@ class Interface extends Component {
            desk - массив расположения шашек
            dice - массив из двух значений выброса костей
            varNum - число ходов при данном выбросе костей
-           diceThrowNum - порядковый номер броска костей
+           diceThrowNum - порядковый номер броска костей - нужно ли это? это же длина массива? или порядковый номер?
            ? frameType - тип кадра:
            ?      'showPos' - демонстрация расположения шашек на поле
            ?      'showDice' - демонстраия броска костей
@@ -62,7 +63,9 @@ class Interface extends Component {
                wDiceTable: undefined,
                bDiceTable: undefined,
                diceThrowNum: undefined,
-               varNum: undefined
+               varNum: undefined,
+               comment: <b>Начало игры.</b>,
+               playersNum: [initCheckersNum,initCheckersNum]
            };
 
            this.handleOnClick = this.handleOnClick.bind(this);
@@ -104,7 +107,9 @@ class Interface extends Component {
                wDiceTable: ((frame.dice)&&(frame.color === 'white')) ? frame.dice : undefined,
                bDiceTable: ((frame.dice)&&(frame.color === 'black')) ? frame.dice : undefined,
                diceThrowNum: (frame.diceThrowNum) ? frame.diceThrowNum : undefined,
-               varNum: (frame.varNum) ? frame.varNum : undefined
+               varNum: (frame.varNum) ? frame.varNum : undefined,
+               comment: frame.comment,
+               playersNum: frame.playersNum
            });
 
        }
@@ -128,44 +133,126 @@ class Interface extends Component {
                }
            }
 
+           //формирование последнего кадра с результатом игры
+           const gameResult = this.props.gameList.summary.result;
+           const titleComment = <p><b>Игра окончена.</b></p>;
+           const resultComment = gameResult === 'Draw' ?
+                            'Ничья! Победила дружба!!!' :
+                            'Победил игрок "'+this.players[gameResult]+'"!';
+           const dataFormater = new Intl.DateTimeFormat('ru', {
+               weekday: 'short',
+               year: '2-digit',
+               month: '2-digit',
+               day: '2-digit',
+               hour: 'numeric',
+               minute: 'numeric',
+               second: 'numeric'
+           });
+           const timeComment = 'Игра началась '+
+                                dataFormater.format(this.props.gameList.summary.tBegin)+
+                                ' и закончилась '+
+                                dataFormater.format(this.props.gameList.summary.tEnd)+
+                                '. Игра продолжалась '+
+                                this.props.gameList.summary.Duration+
+                                ' милисекунд';
+
            film.push({
                moveNum: (moves[maxMoveNum-1]['black']) ? maxMoveNum+1 : maxMoveNum,
                color: (moves[maxMoveNum-1]['black']) ? 'white' : 'black',
-               desk: this.getDeskPosition(this.props.gameList.summary.finPos)
+               desk: this.getDeskPosition(this.props.gameList.summary.finPos),
+               comment:[titleComment,<br/>,<p>{resultComment}</p>, <br/>,<p>{timeComment}</p>],
+               playersNum:[this.props.gameList.summary.finWhiteNum, this.props.gameList.summary.finBlackNum]
            });
 
            return film;
 
        }
 
+       //формируются кадры по описанию в протоколе игры хода одного из игроков
        makeFramesByMove (move, moveNum, color) {
-           const commentBegin = 'Ходят '+ this.players[color]+'. ';
+           let commentArray = [<p><b>Ходит игрок "{this.players[color]}".</b></p>]; //заголовок комментария к ходы
+
+           //формируется начальный кадр хода игрока
            let initDesk = this.getDeskPosition(move.initPos);
+           commentArray.push('Позиция перед началом хода.');
            let frames = [{
                desk: initDesk,
                moveNum: moveNum,
                color: color,
-               comment: commentBegin+'Позиция перед началом хода.'
+               comment: commentArray.slice(),
+               playersNum: [move.wInitChekersTotalNum,move.bInitChekersTotalNum]
            }];
+           commentArray.pop();
+
+           //формируются кадры с демонстрацией серии бросков костей, пока не выпадет сочетание, позволяющее сделать ход
            let throwNum = move.diceThrow.length;
-           for (let i=0;i<throwNum;i++){
+           for (let i=0;i<throwNum;i++) {
+               if (i === throwNum - 1) {
+                   let varNum = move.diceThrow[i].varNum;
+                   if (varNum === 1)
+                       commentArray.push('В этой позиции при таком броске есть единственный ход.');
+                   else {
+                       let units = varNum % 10;
+                       let tens = (varNum - units) % 100 / 10;
+                       let endOfLine;
+
+                       if (tens === 1) endOfLine = " вариантов хода.";
+                       else switch (units) {
+                           case 1:
+                               endOfLine = " вариант хода.";
+                               break;
+                           case 2:
+                           case 3:
+                           case 4:
+                               endOfLine = " варианта хода.";
+                               break;
+                           default:
+                               endOfLine = " вариантов хода.";
+                       }
+                       commentArray.push('В этой позиции при таком броске есть ' + varNum + endOfLine);
+                   }
+               } else commentArray.push(<p>Попытка № {i + 1} из {throwNum}. При таком броске кубиков в этой позиции нет
+                   ходов.</p>);
+
                frames.push({
                    desk: initDesk,
                    moveNum: moveNum,
                    color: color,
                    dice: move.diceThrow[i].dice,
                    varNum: move.diceThrow[i].varNum,
-                   diceThrowNum: i+1
-
-               })
+                   diceThrowNum: i + 1,
+                   comment: commentArray.slice(),
+                   playersNum: [move.wInitChekersTotalNum,move.bInitChekersTotalNum]
+               });
+               commentArray.pop();
            }
+
+           //формируется кадр с передвинутыми шашками, но до проверки, нужно ли снимать с поля щащки
+           commentArray.push(<p>Сделан ход:</p>);
+           let gameDimen = this.gameDimen;
+           let moverMove = move.move;
+           let direction = color === 'white' ? 1 : -1;
+           const lineEnd = ['','а','а','а','ов','ов','ов','ов','ов','ов'];
+           for (let row=0;row<gameDimen;row++){
+               let checkersRowQnt = moverMove[row].length;
+               let adjust = color === 'white' ? 1 : checkersRowQnt;
+               for(let checkerNum=0;checkerNum<checkersRowQnt;checkerNum++)
+                   if (moverMove[row][checkerNum] !== 0) {
+                       let checkerName = direction * checkerNum + adjust;
+                       commentArray.push(<p>{checkerName}-я шашка в{row===1?'о':''} {row+1}-ом ряду
+                           передвинута на {moverMove[row][checkerNum]} ход{lineEnd[moverMove[row][checkerNum]-1]}</p>);
+                   }
+           }
+           commentArray.push(<p>Проверяется, нужно ли убрать с поля чьи-то шашки.</p>);
            frames.push({
                desk: this.getDeskPosition(move.movedPos),
                moveNum: moveNum,
                color: color,
                dice: move.diceThrow[throwNum-1].dice,
                varNum: move.diceThrow[throwNum-1].varNum,
-               diceThrowNum: throwNum
+               diceThrowNum: throwNum,
+               comment: commentArray.slice(),
+               playersNum: [move.wInitChekersTotalNum,move.bInitChekersTotalNum]
            });
 
            return frames;
@@ -206,9 +293,12 @@ class Interface extends Component {
                     deskPos={this.state.deskPos}
                     wDiceTable={this.state.wDiceTable}
                     bDiceTable={this.state.bDiceTable}
+                    players={this.players}
+                    playersNum={this.state.playersNum}
                     diceThrowNum={this.state.diceThrowNum}
                     varNum={this.state.varNum}
                     maxMoveNum={this.film[lastFrameNum].moveNum}
+                    comment={this.state.comment}
                 />
             </div>
         );

@@ -10,11 +10,16 @@ const GameTreasurer = require('./gameTreasurer');
 summary - объект с общими данными для всей игры, включает в себя
     desk: строка с рамерностью поля "ширина х высота"
     players: массив с никами играющих [0] - за крестики [1] за нолики
+    tBegin: даат и время начала игры
+    tEnd: дата и время окончания игры
+    Duration: продолжительность игры в милисекундах
     result: как закончилась игра - победой крестиков ('white'), победой ноликов ('black') или ничьей ('Draw')
     finPos: массив с позицией в момент окончания игры
             позиция на доске описывается ассоциативным массивом из двух элементов ('white' / 'black'), в кажом из которых
             содержится двумерный массив, перечисляющий номера линий, знаятых соответствующим игроком на каждом ряде;
             если шашек на ряде нет, то массив пустой
+    finWhiteNum: число белых шашек, оставшися на доске к конецу игры
+    finBlackNum: число черных шашек, оставшися на доске к конецу игры
 
 moves: массив описаний каждого хода; каждый элемент массива содержит
        ассоциативный массив, в котором два объекта, описывающих ход каждого игрока:
@@ -69,13 +74,12 @@ class GameSecretary extends GameTreasurer {
 
     }
 
-    fixMoveStartTime (color) {this.gameList.moves[this.getLastMoveNum()][color].tBegin = new Date()
-//    console.log(this.getLastMoveNum(), '==', +(new Date()))
+    fixMoveStartTime (color) {this.gameList.moves[this.getLastMoveNum()][color].tBegin = Date.now()
     }
 
     fixMoveDiceThrow (diceArr, color, varNum) {
         let diceThrowObj = {
-            dice:diceArr,
+            dice:diceArr.slice(),
             varNum: varNum
         };
         this.gameList.moves[this.getLastMoveNum()][color].diceThrow.push(diceThrowObj);
@@ -85,9 +89,11 @@ class GameSecretary extends GameTreasurer {
     fixMoveEnd (move, color) {
         let curMove = this.getLastMoveNum();
         let initPos = this.gameList.moves[curMove][color].initPos;
-        this.gameList.moves[curMove][color].tEnd = new Date();
+        this.gameList.moves[curMove][color].tEnd = Date.now();
         this.gameList.moves[curMove][color].move = move;
         this.gameList.moves[curMove][color].movedPos = super.getMovedPosition(initPos, move, color);
+        this.gameList.moves[curMove][color].wInitChekersTotalNum = super.getCheckersTotalNum(initPos, 'white');
+        this.gameList.moves[curMove][color].bInitChekersTotalNum = super.getCheckersTotalNum(initPos, 'black');
         this.gameList.moves[curMove][color].lost= []; //!!!!!!надо реализовать
     }
 
@@ -103,6 +109,14 @@ class GameSecretary extends GameTreasurer {
             this.gameList.summary.result = 'white';
         else this.gameList.summary.result = 'black';
 
+        this.gameList.summary.finWhiteNum = wSurvived;
+        this.gameList.summary.finBlackNum = bSurvived;
+
+        this.gameList.summary.tBegin = this.getGameStartTime();
+        this.gameList.summary.tEnd = this.getGameEndTime();
+        this.gameList.summary.Duration = this.getGameDuration();
+
+
 //        console.log(this.gameList);
 
     }
@@ -110,14 +124,16 @@ class GameSecretary extends GameTreasurer {
     //
     getLastMoveNum () {return this.gameList.moves.length-1}
 
-    getGameStartTime () {return this.moves[0]['white'].tBegin}
+    getGameStartTime () {return this.gameList.moves[0]['white'].tBegin}
 
     getGameEndTime () {
-        return 1
+        let lastMoveNum = this.getLastMoveNum();
+        let color = this.gameList.moves[lastMoveNum]['black'] ? 'black' : 'white';
+        return this.gameList.moves[lastMoveNum][color].tEnd;
     }
 
     getGameDuration () {
-
+        return this.getGameEndTime() - this.getGameStartTime();
     }
 
 }

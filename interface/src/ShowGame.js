@@ -18,83 +18,52 @@ class ShowGame extends Component {
         const moveNum = this.props.moveNum;
         const maxMoveNum = this.props.maxMoveNum;
         const moverName = this.props.moverName;
+        const players = this.props.players;
+        const playersNum = this.props.playersNum;
         const varNum = this.props.varNum;
         const hiddenNotes = false;
         const notesHeight = ""+(deskLength+2)+"em";
-        const wDiceTable = this.props.wDiceTable;
-        const wDice = wDiceTable ? [<td>{wDiceTable[0]}</td>,<td>{wDiceTable[1]}</td>] : [<td className="row"></td>,<td></td>];
-        const bDiceTable = this.props.bDiceTable;
-        const bDice = bDiceTable ? [<td>{bDiceTable[0]}</td>,<td>{bDiceTable[1]}</td>] : [<td className="row"></td>,<td></td>];
 
         function getDiceBlock (diceTable) {
-            let diceBlock;
+            let diceBlock = [];
 
             if (diceTable) {
-                let firstLine = [<p> Результат броска кубиков: </p>];
-                let secondLine = [<table className="desk" border="3"><tbody><tr><td>{diceTable[0]}</td><td>{diceTable[1]}</td></tr></tbody></table>];
-
-                let units = varNum % 10;
-                let tens = (varNum - units) % 100 / 10;
-                let endOfThirdLine;
-
-                if (tens === 1) endOfThirdLine = "вариантов хода";
-                else switch (units) {
-                    case 1:
-                        endOfThirdLine = "вариант хода";
-                        break;
-                    case 2:
-                    case 3:
-                    case 4:
-                        endOfThirdLine = "варианта хода";
-                        break;
-                    default: endOfThirdLine = "вариантов хода";
-                }
-                /*
-                1, 21 вариант хода
-                2-4,22-24,  варианта хода
-                5-20 вариантов хода
-                */
-                let thirdLine;
-                switch (varNum) {
-                    case undefined:
-                        thirdLine = [<p> В этой позиции при таком броске <br/> нет возможных ходов </p>];
-                        break;
-                    case 1:
-                        thirdLine = [<p> В этой позиции при таком броске <br/> есть единственный ход </p>];
-                        break;
-                    default: thirdLine = [<p> В этой позиции при таком броске <br/> есть {varNum} {endOfThirdLine}</p>];
-                }
-                diceBlock = [firstLine,secondLine,thirdLine];
-            } else diceBlock = [<br/>,<br/>,<br/>,<br/>,<br/>,<br/>,<br/>];
+                let firstLine = [<p key={'1'}> Результат броска кубиков: </p>];
+                let secondLine = [<table className="desk" border="3" key={'2'}><tbody><tr><td>{diceTable[0]}</td><td>{diceTable[1]}</td></tr></tbody></table>];
+                diceBlock = [firstLine,secondLine,<br key={'3'}/>];
+            } else for (let i=0;i<5;i++) diceBlock.push(<br key={''+i}/>);
 
             return diceBlock
         }
 
         let desk = [];
-        let firstRow = [<td></td>];
-        for (let i=1; i<=gameDimen;i++) firstRow.push(<td colSpan={2}>{String.fromCharCode("0x"+(40+i))}</td>);
-        firstRow.push(<td></td>);
-        desk.push(<tr>{firstRow}</tr>);
+        let firstRow = [<td key={'r0c0'}></td>];
+        for (let i=1; i<=gameDimen;i++) firstRow.push(<td colSpan={2} key={'r0c'+i}><b>{i}</b></td>);
+        firstRow.push(<td key={'r0c'+(gameDimen+1)}></td>);
+        desk.push(<tr key={'r0'}>{firstRow}</tr>);
         for (let i=0;i<deskLength;i++) {
-            let tabRow = [<td>{deskLength-i}</td>];
-            for (let j=0;j<gameDimen*2;j++) tabRow.push(<td>{deskPos[i][j]}</td>);
-            tabRow.push(<td>{deskLength-i}</td>);
-            desk.push(<tr>{tabRow}</tr>);
+            let tabRow = [<td key={'r'+(i+1)+'c0'}>{deskLength-i}</td>];
+            for (let j=0;j<gameDimen*2;j++) tabRow.push(<td key={'r'+(i+1)+'c'+(j+1)}>{deskPos[i][j]}</td>);
+            tabRow.push(<td key={'r'+(i+1)+'c'+(gameDimen*2+1)}>{deskLength-i}</td>);
+            desk.push(<tr key={'r'+(i+1)}>{tabRow}</tr>);
         }
-        desk.push(<tr>{firstRow}</tr>);
+        desk.push(<tr key={'r'+(deskLength+1)}>{firstRow}</tr>);
 
         return (
-            <div className="App" >
+            <div>
 
                 <div className="rightSide">
-                    <p> Ход № {moveNum} из {maxMoveNum}</p>
+                    <p>Ход № {moveNum} из {maxMoveNum}</p>
+                    <p>На доске:</p>
+                    <p className="App">Шашек игрока "{players['white']}" : {playersNum[0]}</p>
+                    <p className="App">Шашек игрока "{players['black']}" : {playersNum[1]}</p>
                     {getDiceBlock(this.props.wDiceTable)}
                     <table className="desk" border="3"><col/><col span={gameDimen*2} className="coln"/><tbody>{desk}</tbody></table>
                     {getDiceBlock(this.props.bDiceTable)}
                 </div>
-                <p className="Notes" hidden={hiddenNotes} height={notesHeight}>
-                    Здесь будут комментарии к кадрам!!!
-                </p>
+                <div className="Notes" hidden={hiddenNotes} height={notesHeight}>
+                    {this.props.comment}
+                </div>
             </div>
         );
 
@@ -102,16 +71,3 @@ class ShowGame extends Component {
 }
 
 export default ShowGame;
-/*
-                <div className="rightSide">
-                    <p> Ход № {moveNum} из {maxMoveNum} делают {moverName}</p>
-                    <p> Результат броска кубиков </p>
-                    <table className="desk" border="3"><col span={2} className="coln"/><tbody><tr>{wDice}</tr></tbody></table>
-                    <p> Нет возможных ходов </p>
-                    <table className="desk" border="3"><col/><col span={gameDimen*2} className="coln"/><tbody>{desk}</tbody></table>
-                    <p> Результат броска кубиков </p>
-                    <table className="desk" border="3"><col span={2} className="coln"/><tbody><tr>{bDice}</tr></tbody></table>
-                    <p> Нет возможных ходов </p>
-                </div>
-
- */
