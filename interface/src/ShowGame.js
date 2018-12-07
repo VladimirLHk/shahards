@@ -57,9 +57,9 @@ class ShowGame extends Component {
                     <p>На доске:</p>
                     <p className="App">Шашек игрока "{players['white']}" : {playersNum[0]}</p>
                     <p className="App">Шашек игрока "{players['black']}" : {playersNum[1]}</p>
-                    {getDiceBlock(this.props.wDiceTable)}
-                    <table className="desk" border="3"><col/><col span={gameDimen*2} className="coln"/><tbody>{desk}</tbody></table>
                     {getDiceBlock(this.props.bDiceTable)}
+                    <table className="desk" border="3"><col/><col span={gameDimen*2} className="coln"/><tbody>{desk}</tbody></table>
+                    {getDiceBlock(this.props.wDiceTable)}
                 </div>
                 <div className="Notes" hidden={hiddenNotes} height={notesHeight}>
                     {this.props.comment}

@@ -4,7 +4,13 @@ table {
 
 .App {
   text-align: left;
+  margin-left: 5ex;
 
+}
+
+.Ctrl {
+  margin-left: 11ex;
+  margin-top: 2ex;
 }
 
 .Notes {

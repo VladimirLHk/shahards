@@ -15,7 +15,7 @@ class Control extends Component {
 
     render() {
         return (
-            <div className="App">
+            <div className="Ctrl">
                 <button id="Back" onClick={this.props.nextPicture}>Back</button>
                 <span>   </span>
                 <button id="Next" onClick={this.props.nextPicture}>Next</button>

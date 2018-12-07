@@ -148,13 +148,15 @@ class Interface extends Component {
                minute: 'numeric',
                second: 'numeric'
            });
-           const timeComment = 'Игра началась '+
+           const timeComment = ['Игра началась '+
                                 dataFormater.format(this.props.gameList.summary.tBegin)+
                                 ' и закончилась '+
-                                dataFormater.format(this.props.gameList.summary.tEnd)+
-                                '. Игра продолжалась '+
+                                dataFormater.format(this.props.gameList.summary.tEnd)+'.',
+                                <br/>,
+                                <br/>,
+                                'Игра продолжалась '+
                                 this.props.gameList.summary.Duration+
-                                ' милисекунд';
+                                ' милисекунд'];
 
            film.push({
                moveNum: (moves[maxMoveNum-1]['black']) ? maxMoveNum+1 : maxMoveNum,
@@ -163,6 +165,8 @@ class Interface extends Component {
                comment:[titleComment,<br/>,<p>{resultComment}</p>, <br/>,<p>{timeComment}</p>],
                playersNum:[this.props.gameList.summary.finWhiteNum, this.props.gameList.summary.finBlackNum]
            });
+
+//           console.log(moves);
 
            return film;
 
@@ -227,14 +231,14 @@ class Interface extends Component {
                commentArray.pop();
            }
 
-           //формируется кадр с передвинутыми шашками, но до проверки, нужно ли снимать с поля щащки
+           //формируется кадр с передвинутыми шашками, но до убирания с поля битых шашек
            commentArray.push(<p>Сделан ход:</p>);
-           let gameDimen = this.gameDimen;
-           let moverMove = move.move;
-           let direction = color === 'white' ? 1 : -1;
+           const gameDimen = this.gameDimen;
+           const moverMove = move.move;
+           const direction = color === 'white' ? 1 : -1;
            const lineEnd = ['','а','а','а','ов','ов','ов','ов','ов','ов'];
            for (let row=0;row<gameDimen;row++){
-               let checkersRowQnt = moverMove[row].length;
+               let checkersRowQnt = move.initPos.get(color)[row].length;
                let adjust = color === 'white' ? 1 : checkersRowQnt;
                for(let checkerNum=0;checkerNum<checkersRowQnt;checkerNum++)
                    if (moverMove[row][checkerNum] !== 0) {
